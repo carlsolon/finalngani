@@ -6,12 +6,12 @@ function vigenereEncrypt(text, key) {
       const keyChar = key[i % key.length].toUpperCase();
       return String.fromCharCode(((char.charCodeAt(0) - A + keyChar.charCodeAt(0) - A) % 26) + A);
     } else if (/[0-9]/.test(char)) {
-      // Convert numbers to letters: 0 → A, 1 → B, ..., 9 → J
+      // Convert numbers to letters (0 → A, 1 → B, ..., 9 → J)
       const numChar = String.fromCharCode(65 + parseInt(char));
       const keyChar = key[i % key.length].toUpperCase();
       return String.fromCharCode(((numChar.charCodeAt(0) - A + keyChar.charCodeAt(0) - A) % 26) + A);
     }
-    return char; // leave other chars unchanged
+    return char;
   }).join('');
 }
 
@@ -20,13 +20,15 @@ function vigenereDecrypt(text, key) {
   return text.toUpperCase().split('').map((char, i) => {
     if (/[A-Z]/.test(char)) {
       const keyChar = key[i % key.length].toUpperCase();
-      return String.fromCharCode(((char.charCodeAt(0) - keyChar.charCodeAt(0) + 26) % 26) + A);
+      const decryptedCharCode = ((char.charCodeAt(0) - keyChar.charCodeAt(0) + 26) % 26) + A;
+      const decryptedChar = String.fromCharCode(decryptedCharCode);
+      return decryptedChar;
     }
     return char;
   }).join('');
 }
 
-// Form Switching
+// UI Switching
 function showLogin() {
   document.getElementById('registerForm').style.display = 'none';
   document.getElementById('loginForm').style.display = 'block';
@@ -37,36 +39,43 @@ function showRegister() {
   document.getElementById('registerForm').style.display = 'block';
 }
 
-// Register (with encryption)
+// Register with encryption
 function register() {
   const username = document.getElementById('reg-username').value.trim().toUpperCase();
   const password = document.getElementById('reg-password').value.trim().toUpperCase();
   const key = "SECRETKEY";
 
-  if (!username || !password) return;
+  if (!username || !password) {
+    alert("Please fill in all fields.");
+    return;
+  }
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
   const encUsername = vigenereEncrypt(username, key);
   const encPassword = vigenereEncrypt(password, key);
 
-  if (users.some(user => user.username === encUsername)) return;
+  if (users.some(user => user.username === encUsername)) {
+    alert("Username already exists.");
+    return;
+  }
 
   users.push({ username: encUsername, password: encPassword });
   localStorage.setItem("users", JSON.stringify(users));
+  alert("Registration successful!");
   showLogin();
 }
 
-// Login (with encrypted comparison)
+// Login with decryption
 function login() {
   const username = document.getElementById('login-username').value.trim().toUpperCase();
   const password = document.getElementById('login-password').value.trim().toUpperCase();
   const key = "SECRETKEY";
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
   const encUsername = vigenereEncrypt(username, key);
   const encPassword = vigenereEncrypt(password, key);
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
 
   const user = users.find(u => u.username === encUsername && u.password === encPassword);
 
